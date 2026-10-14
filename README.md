@@ -1,304 +1,378 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>To-Do List</title>
-</head>
 
-<body>
+prac 4  nosql mongodb and crud operation
+
+1. Create the college database and insert student/course records
+// Select database
+use college
+
+// Create collections
+db.createCollection("student")
+db.createCollection("course")
+
+// Insert student records
+db.student.insertOne({
+  RollNo: 83,
+  Name: "Neelam",
+  City: "Nerul",
+  Age: 20,
+  Gender: "Female",
+  Dob: "19/01/2005",
+  PhoneNo: 12345,
+  Hobbies: ["Reading", "Writing", "Drawing"]
+})
+
+db.student.insertOne({
+  RollNo: 90,
+  Name: "Rohit",
+  City: "Kharghar",
+  Age: 22,
+  Gender: "Male",
+  Dob: "14/09/2002",
+  PhoneNo: 67891,
+  Hobbies: ["Playing", "Reading", "Singing"]
+})
+
+// Display student records
+db.student.find()
+db.student.find().pretty()
+
+// Insert course records
+db.course.insertOne({
+  CourseId: "CO1",
+  CourseName: "DST",
+  Credit: 4,
+  NoOfStudentEnrolled: 100
+})
+
+db.course.insertOne({
+  CourseId: "CO2",
+  CourseName: "DMT",
+  Credit: 2,
+  NoOfStudentEnrolled: 144
+})
+
+// Display course records
+db.course.find()
+db.course.find().pretty()
+
+The following command appears in your notebook, but it deletes the entire college database, including both collections:
+
+// Run only if database deletion is required
+db.dropDatabase()
+2. Create the users collection and insert sample data
+use college
+
+db.createCollection("users")
+
+// Users 1 to 5
+for (var i = 1; i < 6; i++) {
+  db.users.insertOne({
+    Username: "User" + i,
+    Age: i + 10,
+    Gender: "Female",
+    City: "Nerul",
+    Country: "India"
+  })
+}
+
+// Users 7 to 15
+for (var i = 7; i < 16; i++) {
+  db.users.insertOne({
+    Username: "User" + i,
+    Age: i + 5,
+    Gender: "Male",
+    City: "Kapt(a)",
+    Country: "Paris"
+  })
+}
+
+// Users 10 to 24
+for (var i = 10; i < 25; i++) {
+  db.users.insertOne({
+    Username: "User" + i,
+    Age: i + 2,
+    Gender: "Other",
+    City: "London",
+    Country: "US"
+  })
+}
+
+// Display all records
+db.users.find()
+db.users.find().pretty()
+
+// Find a user with London city and age 25
+db.users.find({
+  City: "London",
+  Age: 25
+}).pretty()
+
+// Show only Username and City
+db.users.find(
+  { City: "London", Age: 25 },
+  { Username: 1, City: 1, Age: 0 }
+).pretty()
+
+// Limit results
+db.users.find().limit(5).pretty()
+
+// Skip first 10 records
+db.users.find().skip(10)
+
+// Sort by Age
+db.users.find().sort({ Age: 1 })
+db.users.find().sort({ Age: -1 })
+
+// Sort by multiple fields
+db.users.find().sort({ Country: 1, Age: -1 })
+db.users.find().sort({ Country: -1, Age: 1 })
+db.users.find().sort({ Gender: 1, Age: 1 })
+
+// Find India or Switzerland
+db.users.find({
+  $or: [
+    { Country: "India" },
+    { Country: "Switzerland" }
+  ]
+})
+
+Note: I've formatted the handwritten examples into runnable commands. A few original values and commands are unclear, so this is a cleaned-up version rather than a guaranteed character-for-character transcription.
+
+3. Update documents using $set
+// Update one female user's country
+db.users.updateOne(
+  { Gender: "Female" },
+  { $set: { Country: "Argentina" } }
+)
+
+db.users.find().limit(1)
+
+// Add zipcode to one female user
+db.users.updateOne(
+  { Gender: "Female" },
+  { $set: { zipcode: 90909090 } }
+)
+
+db.users.find().limit(1)
+
+// Update all female users
+db.users.updateMany(
+  { Gender: "Female" },
+  { $set: { Country: "Argentina" } }
+)
+
+db.users.find({ Gender: "Female" })
+
+// Add P.O. box to all female users
+db.users.updateMany(
+  { Gender: "Female" },
+  { $set: { "p.o.box": "abc" } }
+)
+
+db.users.find({ Gender: "Female" })
+
+// Update a nested field
+db.users.updateMany(
+  { Gender: "Female" },
+  { $set: { "p.o.box": { o: { boy: "abc" } } }
+  }
+)
+
+// Add a fax number
+db.users.updateMany(
+  { Gender: "Female" },
+  { $set: { "Fax number": 450987 } }
+)
+
+db.users.find()
+
+// Remove the fax number from female users
+db.users.updateMany(
+  { Gender: "Female" },
+  { $unset: { "Fax number": "" } }
+)
+
+db.users.find()
+4. Remove documents and use cursors
+// Remove users whose Gender is Other
+db.users.deleteMany({ Gender: "Other" })
+
+db.users.find()
+
+// Remove all documents from the collection
+// CAUTION: This empties the users collection
+db.users.deleteMany({})
+
+// Drop the collection
+// CAUTION: This deletes the collection itself
+db.users.drop()
+
+// Find one female user
+db.users.findOne({ Gender: "Female" })
+
+// Display all male users using a cursor
+var c = db.users.find({ Gender: "Male" })
+
+while (c.hasNext()) {
+  printjson(c.next())
+}
+
+// Display the second male user (index starts at 0)
+var c = db.users.find({ Gender: "Male" })
+
+while (c.hasNext()) {
+  printjson(c.next())
+}
+
+// Explain the query execution plan
+db.users.find({ Gender: "Female" })
+  .explain("allPlansExecution")
+
+Remember: findOne() returns one matching document. A cursor lets you process multiple documents one by one.
+
+5. Comparison operators
+// Age less than 30
+db.users.find({ Age: { $lt: 30 } })
+
+// Age less than or equal to 20
+db.users.find({ Age: { $lte: 20 } }).pretty()
+
+// Age greater than 15
+db.users.find({ Age: { $gt: 15 } })
+
+// Age greater than or equal to 20
+db.users.find({ Age: { $gte: 20 } })
+
+// Update hobbies for all female users
+db.users.updateMany(
+  { Gender: "Female" },
+  {
+    $set: {
+      Hobbies: ["Singing", "Dancing", "Kho Kho"]
+    }
+  }
+)
+
+db.users.find({ Gender: "Female" })
+
+// Update hobbies for users whose age is 11
+db.users.updateMany(
+  { Age: 11 },
+  {
+    $set: {
+      Hobbies: ["Singing", "Dancing", "Kho Kho"]
+    }
+  }
+)
+
+db.users.find({ Age: 11 })
+
+// Update hobbies for all users
+db.users.updateMany(
+  {},
+  {
+    $set: {
+      Hobbies: [
+        "Singing",
+        "Dancing",
+        "Kho Kho",
+        "Pottery",
+        "Cooking"
+      ]
+    }
+  }
+)
+6. $in, $nin, $or and $and
+// Hobbies include Cooking or Pottery
+db.users.find({
+  Hobbies: { $in: ["Cooking", "Pottery"] }
+})
+
+// Hobbies do not include Reading
+db.users.find({
+  Hobbies: { $nin: ["Reading"] }
+})
+
+// Age greater than 15 OR hobby is Cooking/Pottery
+db.users.find({
+  $or: [
+    { Age: { $gt: 15 } },
+    { Hobbies: { $in: ["Cooking", "Pottery"] } }
+  ]
+})
+
+// Age greater than 15 AND hobby is Cooking/Pottery
+db.users.find({
+  $and: [
+    { Age: { $gt: 15 } },
+    { Hobbies: { $in: ["Cooking", "Pottery"] } }
+  ]
+})
+7. Regular expressions
+// Insert additional sample users
+for (var i = 60; i < 69; i++) {
+  db.users.insertOne({
+    Username: "User" + i,
+    Age: i + 10,
+    Gender: "Female",
+    City: "Nerul",
+    Country: "Switzerland"
+  })
+}
+
+for (var i = 80; i < 100; i++) {
+  db.users.insertOne({
+    Username: "User" + i,
+    Age: i + 10,
+    Gender: "Female",
+    City: "Nerul",
+    Country: "Nigeria"
+  })
+}
+
+// Display all users
+db.users.find()
+
+// Country starts with "Sw"
+db.users.find({ Country: /^Sw/i })
+
+// Country contains "sw", case-insensitive
+db.users.find({ Country: /sw/i })
+
+// Country ends with "a"
+db.users.find({ Country: /a$/i })
+
+// Country has exactly two characters
+db.users.find({ Country: /^.{2}$/i })
+
+// Country contains "t" followed by another character
+db.users.find({ Country: /t./i })
+8. Indexes
+// Ensure an index exists on Age
+db.users.createIndex({ Age: 1 })
+
+// Create a unique ascending index on Username
+db.users.createIndex(
+  { Username: 1 },
+  { unique: true }
+)
+
+// View indexes
+db.users.getIndexes()
+
+// Drop the index on Age
+db.users.dropIndex({ Age: 1 })
+
+Important for your practical exam: Run the commands in the same order as the relevant exercise. Commands such as dropDatabase(), drop(), and deleteMany({}) delete data, so don't execute them unless your teacher asks you to demonstrate deletion. Also, because the original notebook uses older MongoDB Shell syntax, I have modernized some commands for current mongosh.
+
+This might also interest you.
+
+BOSTON INSTITUTE OF ANALYTICS GLOBAL EDUCATION PRIVATE LIMITED
+
+Become Job Ready in Data Science, AI & GenAI
+
+Learn in-demand AI skills through practical training, projects and industry experience.
+
+Ad
+More options
 
-    <h2>My To-Do List</h2>
-
-    <input type="text" id="taskInput" placeholder="Enter a task">
-
-    <button onclick="addTask()">Add Task</button>
-    <button onclick="displayTasks()">Display Tasks</button>
-
-    <ul id="taskList"></ul>
-
-    <script>
-
-        let tasks = [];
-
-        function addTask() {
-
-            let task = document.getElementById("taskInput").value;
-
-            if (task === "") {
-                alert("Please enter a task");
-                return;
-            }
-
-            tasks.push(task);
-
-            document.getElementById("taskInput").value = "";
-
-            alert("Task added successfully!");
-        }
-
-        function displayTasks() {
-
-            let taskList = document.getElementById("taskList");
-
-            taskList.innerHTML = "";
-
-            tasks.forEach(function(task, index) {
-
-                let li = document.createElement("li");
-
-                let taskText = document.createElement("span");
-                taskText.textContent = task;
-
-                let completeButton = document.createElement("button");
-                completeButton.textContent = "Mark Completed";
-
-                completeButton.onclick = function() {
-                    taskText.textContent = "✓ " + task;
-                };
-
-                let deleteButton = document.createElement("button");
-                deleteButton.textContent = "Delete";
-
-                deleteButton.onclick = function() {
-                    tasks.splice(index, 1);
-                    displayTasks();
-                };
-
-                li.appendChild(taskText);
-                li.appendChild(document.createTextNode(" "));
-
-                li.appendChild(completeButton);
-                li.appendChild(document.createTextNode(" "));
-
-                li.appendChild(deleteButton);
-
-                taskList.appendChild(li);
-            });
-        }
-
-    </script>
-
-</body>
-</html>.      
-
-
-
-
-  <!DOCTYPE html>
-<html>
-
-<head>
-    <title>Interactive Calculator</title>
-</head>
-
-<body>
-
-    <!-- Question:
-         Create an Interactive Calculator integrating variables,
-         functions and DOM Manipulation using JavaScript.
-    -->
-
-    <h2>Interactive Calculator</h2>
-
-    <div id="calc">
-        <input type="text" id="display" disabled>
-        <br><br>
-    </div>
-
-    <script>
-
-        let expression = "";
-
-        const display = document.getElementById("display");
-        const calcDiv = document.getElementById("calc");
-
-        const buttons = [
-            "7", "8", "9", "/",
-            "4", "5", "6", "*",
-            "1", "2", "3", "-",
-            "0", ".", "=", "+",
-            "C"
-        ];
-
-        buttons.forEach(function(label) {
-
-            const btn = document.createElement("button");
-
-            btn.textContent = label;
-
-            btn.addEventListener("click", function() {
-                handleClick(label);
-            });
-
-            calcDiv.appendChild(btn);
-        });
-
-
-        function handleClick(label) {
-
-            if (label === "C") {
-
-                expression = "";
-
-            }
-
-            else if (label === "=") {
-
-                try {
-                    expression = Function(
-                        "return " + expression
-                    )().toString();
-                }
-
-                catch (e) {
-                    expression = "Error";
-                }
-
-            }
-
-            else {
-
-                expression += label;
-
-            }
-
-            display.value = expression;
-        }
-
-    </script>
-
-</body>
-
-</html>
-
-
-/*
-Question:
-To build a web server using Express.js with multiple routes
-handling different HTTP requests.
-*/
-
-const express = require("express");
-
-const app = express();
-
-const PORT = 3000;
-
-
-// Home Route
-app.get("/", (req, res) => {
-    res.send(`
-        <h1>Home Page</h1>
-        <p>Welcome to my website.</p>
-    `);
-});
-
-
-// About Route
-app.get("/about", (req, res) => {
-    res.send(`
-        <h1>About Page</h1>
-        <p>This is the About page.</p>
-    `);
-});
-
-
-// Services Route
-app.get("/services", (req, res) => {
-    res.send(`
-        <h1>Services Page</h1>
-        <p>This is the list of our services.</p>
-    `);
-});
-
-
-// Contact Route
-app.get("/contact", (req, res) => {
-    res.send(`
-        <h1>Contact Page</h1>
-        <p>Contact us at info@example.com</p>
-    `);
-});
-
-
-// Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
-
-
-
-
-
-
-
-/*
-Question:
-To write custom Express middleware for request logging
-and centralized error handling, and use dynamic route parameters.
-*/
-
-const express = require("express");
-const fs = require("fs");
-
-const app = express();
-
-
-// Custom Logging Middleware
-app.use((req, res, next) => {
-
-    const log = `${new Date().toISOString()} - ${req.method} - ${req.url}\n`;
-
-    console.log(log.trim());
-
-    fs.appendFile("log.txt", log, (err) => {
-        if (err) {
-            console.log("Error writing log file");
-        }
-    });
-
-    next();
-});
-
-
-// Dynamic User Route
-app.get("/users/:id", (req, res) => {
-
-    res.send(`User details for ID: ${req.params.id}`);
-
-});
-
-
-// Dynamic Product Route
-app.get("/product/:category/:id", (req, res) => {
-
-    res.send(
-        `Category: ${req.params.category}, Product ID: ${req.params.id}`
-    );
-
-});
-
-
-// Route to generate an error
-app.get("/error", (req, res) => {
-
-    throw new Error("Something went wrong!");
-
-});
-
-
-// Centralized Error Handling Middleware
-app.use((err, req, res, next) => {
-
-    console.error(err.stack);
-
-    res.status(500).send("Something broke on the server!");
-
-});
-
-
-// Start Server
-app.listen(3000, () => {
-
-    console.log("Server running on port 3000");
-
-});
